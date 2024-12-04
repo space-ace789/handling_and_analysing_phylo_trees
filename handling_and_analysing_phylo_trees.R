@@ -228,9 +228,54 @@ balance_table <- balance(random_coalescent)
 #now we want to find the average balance across the tree.
 
 #use a for loop to sort each row so the most divers clade is in column 1
-
-for(i in (1:nrow(balance_table))) {
+ for(i in (1:nrow(balance_table))) {
   if (balance_table [i,1] < balance_table [i,2]) {
     balance_table[i,1:2] <- balance_table[i,2:1]}
 }
+#second line of code is saying that you would swap the two columnds if the if statemen
+#is true.
 
+#or can use this code
+
+sorted_balance_table <- t(apply(balance_table, 1, function(row) sort(row, decreasing = TRUE)))
+
+#Calculate the proportional diversity in the more diverse sister clade at each node
+proportional_diversity <- sorted_balance_table[,1]/(sorted_balance_table[,2] + sorted_balance_table[,1])
+mean(proportional_diversity)
+
+#the mean imbalance will be between 0.5-1, higher number is more imbalanced
+
+source(here("Functions", "calculating_imbalance.R"))
+
+imbalance_metric(random_coalescent)
+imbalance_metric(right_imbalanced_tree)
+imbalance_metric(fusarium_tree)
+
+#Mapping a binary character
+
+#if we want to look at trait evolution then we would need to map changes in trait
+#onto the tree. Methods to do this depend on whether the traits are discrete or continuous.
+
+#Can recontrsuct the character along the tree using max likelihood, estimates the evo 
+#rate of charater and at the same time estimates likelihood that it was found in the
+#ancestral node. Defualt is to assume going from 0 -> 1 and 1 -> 0 are the same, 
+#do this using the ace function.
+
+fusarium_tree$node.label <- NULL #clears any values currently stored at the nodes so can write new entries
+wilt_traits_recon <- ace(fusarium_data$Wilt, fusarium_tree, type = "discrete")
+wilt_traits_recon
+
+wilt_traits_recon$lik.anc
+#gives the likelihoods for each node
+
+plot(fusarium_tree, type = "phylogram", label.offset = 0.5)
+cols <- c("#249ea0","#f78104")
+tiplabels(pch = 21, bg = cols[fusarium_data$Wilt+1], cex = 1.5)
+nodelabels(thermo = wilt_traits_recon$lik.anc, piecol = cols, cex = 0.8)
+axisPhylo()
+legend("topright",
+       legend = c("Wilt", "No Wilt"),
+       fill = c("#f78104", "#249ea0"),
+       border = "black",
+       cex= 0.6,
+       xpd = TRUE)
