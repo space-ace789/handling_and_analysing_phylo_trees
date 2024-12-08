@@ -1,0 +1,178 @@
+---
+title: "Trees in R Assignment"
+output:
+  html_document:
+      toc: true
+      toc_depth: 2
+      theme:
+        bootswatch: cerulean
+---
+
+## Abstract
+
+## Tree Metrics
+
+#### Set up
+
+###### Loading required packages:
+
+```{r results='hide', message=FALSE}
+library(ape)
+library(bslib)
+```
+
+###### Loading in the tree:
+
+The raw data for this tree was downloaded from the Open Tree of Life datastore, (McTavish EJ, et. al., 2015), and can be accessed via the following link <https://tree.opentreeoflife.org/curator/study/view/pg_1646/?tab=home>.
+
+```{r reading in tree from newick data}
+tree <- read.tree(text = "((((((((((((((Arctocephalus_australis:0.8,Arctocephalus_galapagoensis:0.8):0.3,Arctocephalus_forsteri:1.1):1.9,(Arctocephalus_gazella:0.1,Arctocephalus_tropicalis:0.1):2.9):0.1,(Arctocephalus_philippii:0.3,Arctocephalus_townsendi:0.3):2.8):0.2,Phocarctos_hookeri:3.3):0.9,Arctocephalus_pusillus:4.2):0.2,Otaria_byronia:4.4):0.8,(Eumetopias_jubatus:4.5,Zalophus_californianus:4.5):0.7):0.4,Neophoca_cinerea:5.6):2.6,Callorhinus_ursinus:8.2):9.8,Odobenus_rosmarus:18):5,(((Cystophora_cristata:7.9,(((((Halichoerus_grypus:1.7,Pusa_caspica:1.7):0.1,Pusa_sibirica:1.8):0.1,(Phoca_largha:0.9,Phoca_vitulina:0.9):1):0.2,Pusa_hispida:2.1):4.3,(Histriophoca_fasciata:4.3,Pagophilus_groenlandica:4.3):2.1):1.5):5.1,Erignathus_barbatus:13):3,(((((Hydrurga_leptonyx:4.3,Leptonychotes_weddellii:4.3):2.5,Ommatophoca_rossii:6.8):0.3,Lobodon_carcinophagus:7.1):2.8,(Mirounga_angustirostris:2.3,Mirounga_leonina:2.3):7.6):1.4,(Monachus_monachus:9.9,(Monachus_schauinslandi:4.9,Monachus_tropicalis:4.9):5):1.4):4.7):7):12.7,Ursidae:35.7):7.7,Canidae:43.4);")
+```
+
+###### Plotting Tree:
+
+```{r plotting tree, fig.align='center', fig.height= 9, fig.width= 9, fig.cap="Fig 1: Phylogenetic tree of the Pinnipeds with Canidae and Ursidae acting as outgroups based on data from (Hidgon, et. al., 2007)"}
+ladderised_tree <- ladderize(tree, right=FALSE)
+plot(ladderised_tree, cex = 0.7)
+axisPhylo(cex = 0.5)
+```
+
+Insert caption for this tree here
+
+**Insert caption here**
+
+#### Analysis
+
+###### Tree Topology:
+
+Although these features can often be inferred from looking at the shape of the tree I decided to test for both whether the tree was ultrametric and bifurcating.
+
+```{r testing if tree is ultrametric and bifurcating}
+is.ultrametric(tree)
+is.binary(tree)
+```
+
+The tree being ultrametric was expected as this is a tree of all extant pinnipeds and both of the outgroups used are also clades that still exist today so all of the branches should continue until the present day.
+
+Although it does match the observed branching pattern of the tree it was slightly unexpected that the tree was found to be bifurcating. This is because this suggeststhe tree contains no polytomies. This is interesting however as it has been suggested that polytomies could exist both at the basal end of the tribe *Phocini* (one of three tribes that make up the *Phocinae* subfamily of earless/true seals) and potentially within the genus *Pusa* (Hidgon, et. al., 2007).
+
+It is also important to check these as some of the functions used to analyse tree metrics assume that trees are ultrametric and bifurcating.
+
+Phylogenetic diversity:
+
+An easy way to calculate phylogenetic diversity is to find the total branch length of the whole tree.
+
+```{r whole tree phylogenetic diversity}
+sum(tree$edge.length)
+```
+
+As the branch lengths in this tree are based on divergence dates in millions of years the total sum of branch lengths can be used to indicate the total amount of evolutionary history which is contained within this tree. This shows that this tree contains 319.8 years of evolutionary history, however this also includes the *Canidae* and *Ursidae* out groups.
+
+From this point forward the tree containing no outgroups will be used so that analyses are concerning solely the pinnipeds.
+
+```{r Creating tree without outgroups, echo=FALSE}
+no_outgroup_tree <- drop.tip(tree, c("Canidae", "Ursidae"))
+```
+
+```{r Pinniped phylogenetic diversity}
+sum(no_outgroup_tree$edge.length)
+```
+
+Running this without the outgroups included shows that from the last common pinniped ancestor there is 220.3 million years of evolutionary history conserved.
+
+Tree Imbalance:
+
+```{r Function for calculating imbalance metric, echo=FALSE}
+imbalance_metric <-function (tr) {
+x<-balance(tr)
+for (i in (1:nrow(x))) {
+if (x[i,1]<x[i,2]) {
+x[i,1:2]<- x[i,2:1]}
+}
+return(mean(x[,1]/(x[,1]+x[,2])))}
+```
+
+```{r Pinniped Imbalance Metric}
+imbalance_metric(no_outgroup_tree)
+```
+
+Imbalance metric is 0.70, showing that while the tree is not completely balanced it is still overall more balanced than unbalanced. It also suggests there is a slight tendency for progressive branching, which can be seen specifically in the genus *Arctocephalus* and also the tribe *Phocina* (includes the genus *Phoca* as well as *Halicheoeris grypus*).
+
+Speciation Rate:
+
+**insert info about yule here**
+
+```{r}
+Yule_result <- yule(no_outgroup_tree)
+Yule_result$lambda* 34
+
+```
+
+```{r}
+diversi.gof(branching.times(no_outgroup_tree))
+```
+
+## Bonus Analysis - Comparing Diversity intra-clade diversity
+
+As well as looking at the overall diversity of a tree it can also be interesting to see if certain families within a clade differ in amounts of diversity. Although there are technically three extant families within the Pinnipeds as there is only one living species within *Odobenidae* therefore I will just be comparing *Otariidae* and *Phocidae* in this analysis.
+
+<!--I also wanted to see if the two main families, Otariidae and Phocidae where equally diverse, however I did not want this code to interfere with the ability of the main tree analysis to automatically reproduce figures and tables if topology if the original tree is changed, hence why this section has been moved to the end of the report-->
+
+Otariidae imbalance:
+
+```{r Creating Otariidae Sub-Tree, echo=FALSE}
+subtrees <- subtrees(tree)
+Otariidae_subtree <- subtrees[[5]]
+```
+
+```{r Otariidae Phylogenetic Diversity}
+Otariidae_imbalance <- imbalance_metric(Otariidae_subtree)
+Otariidae_imbalance
+```
+
+Phocidae Imbalance:
+
+```{r echo=FALSE}
+subtrees <- subtrees(tree)
+Phocidae_subtree <- subtrees[[18]]
+```
+
+```{r}
+imbalance_metric(Phocidae_subtree)
+```
+
+```{r Function for creating a balance table,  echo=FALSE}
+imbalance_table <-function (tr) {
+x<-balance(tr)
+for (i in (1:nrow(x))) {
+if (x[i,1]<x[i,2]) {
+x[i,1:2]<- x[i,2:1]}
+}
+return(data.frame(x[,1]/(x[,1]+x[,2])))}
+```
+
+```{r echo=FALSE, results='hide'}
+Otariidae_imbalance_table <-(imbalance_table(Otariidae_subtree))
+colnames(Otariidae_imbalance_table)[1] ="Balance"
+Otariidae_imbalance_table
+```
+
+```{r echo=FALSE, results='hide'}
+Phocidae_imbalance_table <-(imbalance_table(Phocidae_subtree))
+colnames(Phocidae_imbalance_table)[1] ="Balance"
+Phocidae_imbalance_table
+```
+
+F test of equal variance:
+
+```{r}
+var.test(Phocidae_imbalance_table$Balance, Otariidae_imbalance_table$Balance)
+```
+
+P value is 0.3054, as this is \> 0.05 we do not reject the null hypothesis and can conclude that the variances a likely not significantly different.
+
+```{r}
+t.test(Phocidae_imbalance_table$Balance, Otariidae_imbalance_table$Balance, var.equal = TRUE)
+```
+
+P value is 0.2057 meaning that we do not reject the null hypothesis and conclude that the imbalance metric between Phocidae and Otariidae is not statistically significant.
