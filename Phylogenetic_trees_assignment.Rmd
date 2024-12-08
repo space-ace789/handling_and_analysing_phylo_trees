@@ -10,6 +10,8 @@ output:
 
 ## Abstract
 
+The tree being investigated here is one of all extant pinnipeds alongside 2 outgroups. The branch lengths in the tree is based on were calculated
+
 ## Tree Metrics
 
 #### Set up
@@ -18,7 +20,7 @@ output:
 
 ```{r load in packages, results='hide', message=FALSE}
 library(ape)
-library(bslib)
+library(bslib) #allows access to bootswatch themes for markdown
 ```
 
 ###### Loading in the tree:
@@ -32,12 +34,12 @@ tree <- read.tree(text = "((((((((((((((Arctocephalus_australis:0.8,Arctocephalu
 ###### Plotting Tree:
 
 ```{r plotting tree, fig.align='center', fig.height= 9, fig.width= 9, fig.cap="Fig 1: Phylogenetic tree of the Pinnipeds with axis in millions of years based on data from (Hidgon, et. al., 2007)"}
-ladderised_tree <- ladderize(tree, right=FALSE)
+ladderised_tree <- ladderize(tree, right=FALSE) #Used to make it easier to see how the time scale maps onto the tree.
 plot(ladderised_tree, cex = 0.7)
 axisPhylo(cex = 0.5)
 ```
 
-**Insert caption for this tree here**
+This tree shows the 33 extant species of pinnipeds, as well as the now extinct Carribean Monk Seal (*Monachus tropicalis*) in addition to Canidae and Ursidae as the outgroups. *Mustelidae* may have been a more appropriate outgroup as since this study it has been shown that they are the sister family to *Pinnepedia* (Park, et. al., 2024). It also shows Odobenids sitting within the *Otariidae* which is the better supported hypothesis, however it was once thought they might group within *Phocidae* instead (Hidgon, et. al, 2007)
 
 #### Analysis
 
@@ -56,9 +58,7 @@ Although it does match the observed branching pattern of the tree it was slightl
 
 It is also important to check these as some of the functions used to analyse tree metrics assume that trees are ultrametric and bifurcating.
 
-Phylogenetic diversity:
-
-An easy way to calculate phylogenetic diversity is to find the total branch length of the whole tree.
+###### Phylogenetic diversity:
 
 ```{r Whole tree phylogenetic diversity}
 sum(tree$edge.length)
@@ -72,13 +72,18 @@ From this point forward the tree containing no outgroups will be used so that an
 no_outgroup_tree <- drop.tip(tree, c("Canidae", "Ursidae"))
 ```
 
-```{r Pinniped phylogenetic diversity}
-sum(no_outgroup_tree$edge.length)
+```{r Pinniped phylogenetic diversity calculation, echo=FALSE}
+phylo_div <- sum(no_outgroup_tree$edge.length)
 ```
+
+```{r Phylogenetic Diversity}
+phylo_div
+```
+
 
 Running this without the outgroups included shows that from the last common pinniped ancestor there is 220.3 million years of evolutionary history conserved.
 
-Tree Imbalance:
+###### Tree Imbalance:
 
 ```{r Function for calculating imbalance metric, echo=FALSE}
 imbalance_metric <-function (tr) {
@@ -90,25 +95,47 @@ x[i,1:2]<- x[i,2:1]}
 return(mean(x[,1]/(x[,1]+x[,2])))}
 ```
 
-```{r Pinniped Imbalance Metric}
-imbalance_metric(no_outgroup_tree)
+```{r Pinniped Imbalance Metric Calculation, echo=FALSE}
+imbalance <- imbalance_metric(no_outgroup_tree)
 ```
+
+```{r Imbalance Metric}
+imbalance
+```
+
 
 Imbalance metric is 0.70, showing that while the tree is not completely balanced it is still overall more balanced than unbalanced. It also suggests there is a slight tendency for progressive branching, which can be seen specifically in the genus *Arctocephalus* and also the tribe *Phocina* (includes the genus *Phoca* as well as *Halicheoeris grypus*).
 
-Speciation Rate:
+###### Speciation Rate:
 
-**insert info about yule here**
+Speciation rate can calculated by fitting the yule process to a tree which will allow you to calculate the instantaneous speciation rate λ, which can be multiplied by the number of species to calculate the total speciation rate (Crawford & Suchard, 2013)
+
+```{r Speciation Rate Calculation, echo=FALSE}
+yule_result <- yule(no_outgroup_tree)
+speciation_rate <- yule_result$lambda* (no_outgroup_tree$Nnode + 1) #Nnode +1 represents the number of species
+```
 
 ```{r Speciation Rate}
-yule_result <- yule(no_outgroup_tree)
-yule_result$lambda* 34
+speciation_rate
+```
+
+
+## Metrics Table:
+
+```{r Setting up Table, echo=FALSE}
+tree_metrics_matrix <- matrix(c(phylo_div, imbalance, speciation_rate), ncol = 3, byrow = TRUE, nrow = 1)
+
+colnames(tree_metrics_matrix) <- c('Phylogenetic Diversity','Imbalance','Speciation Rate')
+rownames(tree_metrics_matrix) <- "Values"
+
+metric_table <- as.table(tree_metrics_matrix)
 
 ```
 
-```{r Test of Constant Diversification Rate}
-diversi.gof(branching.times(no_outgroup_tree))
+```{r Table, echo=FALSE}
+knitr::kable(tree_metrics_matrix)
 ```
+
 
 ## Bonus Analysis - Comparing metrics within clades
 
@@ -183,4 +210,3 @@ sum(otariidae_subtree$edge.length)
 ```{r Phocidae Diversity}
 sum(phocidae_subtree$edge.length)
 ```
-
