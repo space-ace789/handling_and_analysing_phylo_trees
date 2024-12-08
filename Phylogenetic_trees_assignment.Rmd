@@ -16,7 +16,7 @@ output:
 
 ###### Loading required packages:
 
-```{r results='hide', message=FALSE}
+```{r load in packages, results='hide', message=FALSE}
 library(ape)
 library(bslib)
 ```
@@ -31,15 +31,13 @@ tree <- read.tree(text = "((((((((((((((Arctocephalus_australis:0.8,Arctocephalu
 
 ###### Plotting Tree:
 
-```{r plotting tree, fig.align='center', fig.height= 9, fig.width= 9, fig.cap="Fig 1: Phylogenetic tree of the Pinnipeds with Canidae and Ursidae acting as outgroups based on data from (Hidgon, et. al., 2007)"}
+```{r plotting tree, fig.align='center', fig.height= 9, fig.width= 9, fig.cap="Fig 1: Phylogenetic tree of the Pinnipeds with axis in millions of years based on data from (Hidgon, et. al., 2007)"}
 ladderised_tree <- ladderize(tree, right=FALSE)
 plot(ladderised_tree, cex = 0.7)
 axisPhylo(cex = 0.5)
 ```
 
-Insert caption for this tree here
-
-**Insert caption here**
+**Insert caption for this tree here**
 
 #### Analysis
 
@@ -62,7 +60,7 @@ Phylogenetic diversity:
 
 An easy way to calculate phylogenetic diversity is to find the total branch length of the whole tree.
 
-```{r whole tree phylogenetic diversity}
+```{r Whole tree phylogenetic diversity}
 sum(tree$edge.length)
 ```
 
@@ -102,19 +100,19 @@ Speciation Rate:
 
 **insert info about yule here**
 
-```{r}
-Yule_result <- yule(no_outgroup_tree)
-Yule_result$lambda* 34
+```{r Speciation Rate}
+yule_result <- yule(no_outgroup_tree)
+yule_result$lambda* 34
 
 ```
 
-```{r}
+```{r Test of Constant Diversification Rate}
 diversi.gof(branching.times(no_outgroup_tree))
 ```
 
-## Bonus Analysis - Comparing Diversity intra-clade diversity
+## Bonus Analysis - Comparing metrics within clades
 
-As well as looking at the overall diversity of a tree it can also be interesting to see if certain families within a clade differ in amounts of diversity. Although there are technically three extant families within the Pinnipeds as there is only one living species within *Odobenidae* therefore I will just be comparing *Otariidae* and *Phocidae* in this analysis.
+Although there are technically three extant families within the Pinnipeds as there is only one living species within *Odobenidae* therefore I will just be comparing *Otariidae* and *Phocidae* in this analysis.
 
 <!--I also wanted to see if the two main families, Otariidae and Phocidae where equally diverse, however I did not want this code to interfere with the ability of the main tree analysis to automatically reproduce figures and tables if topology if the original tree is changed, hence why this section has been moved to the end of the report-->
 
@@ -122,23 +120,22 @@ Otariidae imbalance:
 
 ```{r Creating Otariidae Sub-Tree, echo=FALSE}
 subtrees <- subtrees(tree)
-Otariidae_subtree <- subtrees[[5]]
+otariidae_subtree <- subtrees[[5]]
 ```
 
-```{r Otariidae Phylogenetic Diversity}
-Otariidae_imbalance <- imbalance_metric(Otariidae_subtree)
-Otariidae_imbalance
+```{r Otariidae Imbalance }
+imbalance_metric(otariidae_subtree)
 ```
 
 Phocidae Imbalance:
 
-```{r echo=FALSE}
+```{r Creating Phocidae Sub-Tree, echo=FALSE}
 subtrees <- subtrees(tree)
-Phocidae_subtree <- subtrees[[18]]
+phocidae_subtree <- subtrees[[18]]
 ```
 
-```{r}
-imbalance_metric(Phocidae_subtree)
+```{r Phocidae Imbalance}
+imbalance_metric(phocidae_subtree)
 ```
 
 ```{r Function for creating a balance table,  echo=FALSE}
@@ -151,28 +148,39 @@ x[i,1:2]<- x[i,2:1]}
 return(data.frame(x[,1]/(x[,1]+x[,2])))}
 ```
 
-```{r echo=FALSE, results='hide'}
-Otariidae_imbalance_table <-(imbalance_table(Otariidae_subtree))
-colnames(Otariidae_imbalance_table)[1] ="Balance"
-Otariidae_imbalance_table
+```{r Otariidae Imbalance Table, echo=FALSE, results='hide'}
+otariidae_imbalance_table <-(imbalance_table(otariidae_subtree))
+colnames(otariidae_imbalance_table)[1] ="Balance"
+otariidae_imbalance_table
 ```
 
-```{r echo=FALSE, results='hide'}
-Phocidae_imbalance_table <-(imbalance_table(Phocidae_subtree))
-colnames(Phocidae_imbalance_table)[1] ="Balance"
-Phocidae_imbalance_table
+```{r Phocidae Imbalance Table, echo=FALSE, results='hide'}
+phocidae_imbalance_table <-(imbalance_table(phocidae_subtree))
+colnames(phocidae_imbalance_table)[1] ="Balance"
+phocidae_imbalance_table
 ```
 
 F test of equal variance:
 
-```{r}
-var.test(Phocidae_imbalance_table$Balance, Otariidae_imbalance_table$Balance)
+```{r F Test}
+var.test(phocidae_imbalance_table$Balance, otariidae_imbalance_table$Balance)
 ```
 
 P value is 0.3054, as this is \> 0.05 we do not reject the null hypothesis and can conclude that the variances a likely not significantly different.
 
-```{r}
-t.test(Phocidae_imbalance_table$Balance, Otariidae_imbalance_table$Balance, var.equal = TRUE)
+```{r 2 Sample T Test}
+t.test(phocidae_imbalance_table$Balance, otariidae_imbalance_table$Balance, var.equal = TRUE)
 ```
 
 P value is 0.2057 meaning that we do not reject the null hypothesis and conclude that the imbalance metric between Phocidae and Otariidae is not statistically significant.
+
+I also decided to investigate whether the two families are equally diverse and contain similar amounts of evolutionary history.
+
+```{r Otariid Diversity}
+sum(otariidae_subtree$edge.length)
+```
+
+```{r Phocidae Diversity}
+sum(phocidae_subtree$edge.length)
+```
+
