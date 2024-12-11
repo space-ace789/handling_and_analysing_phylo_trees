@@ -10,7 +10,7 @@ output:
 
 ## Abstract
 
-The tree being investigated here is one of all extant pinnipeds alongside 2 outgroups. The branch lengths in the tree is based on were calculated
+The tree being investigated here is one of all extant pinnipeds alongside 2 outgroups. The branch lengths in the tree is based on were calculated from a weighted matrix produced via analysis of 50 different genes (Hidgon, et. al., 2007). It is comprised of 3 monophyletic families, Phocidae (the earless or true seals), Otariidae (sealions and fur seals) and Odobenidae (Walruses). The Odobendiae only have one extant member and are grouped within the superfamily Otarioidea alonside the Otariids. The Phocidae are in turn split into two subfamilies, Monachinae which is the southern hemisphere seals and Phocinae which are the northern hemisphere seals. Otariidae are similarly divided into two subfamilies, the Artocephalinae also known as fur seals and the Otariinae which are the sea lions (Hidgon et. al., 2007).
 
 ## Tree Metrics
 
@@ -20,7 +20,9 @@ The tree being investigated here is one of all extant pinnipeds alongside 2 outg
 
 ```{r load in packages, results='hide', message=FALSE}
 library(ape)
-library(bslib) #allows access to bootswatch themes for markdown
+library(bslib)#allows access to bootswatch themes for markdown
+library(ggplot2)
+library(scales)
 ```
 
 ###### Loading in the tree:
@@ -69,11 +71,11 @@ As the branch lengths in this tree are based on divergence dates in millions of 
 From this point forward the tree containing no outgroups will be used so that analyses are concerning solely the pinnipeds.
 
 ```{r Creating tree without outgroups, echo=FALSE}
-no_outgroup_tree <- drop.tip(tree, c("Canidae", "Ursidae"))
+tree <- drop.tip(tree, c("Canidae", "Ursidae")) #would ignore this step if not removing outgroups from tree
 ```
 
 ```{r Pinniped phylogenetic diversity calculation, echo=FALSE}
-phylo_div <- sum(no_outgroup_tree$edge.length)
+phylo_div <- sum(tree$edge.length)
 ```
 
 ```{r Phylogenetic Diversity}
@@ -86,8 +88,8 @@ Running this without the outgroups included shows that from the last common pinn
 ###### Tree Imbalance:
 
 ```{r Function for calculating imbalance metric, echo=FALSE}
-imbalance_metric <-function (tr) {
-x<-balance(tr)
+imbalance_metric <-function (tree) {
+x<-balance(tree)
 for (i in (1:nrow(x))) {
 if (x[i,1]<x[i,2]) {
 x[i,1:2]<- x[i,2:1]}
@@ -96,7 +98,7 @@ return(mean(x[,1]/(x[,1]+x[,2])))}
 ```
 
 ```{r Pinniped Imbalance Metric Calculation, echo=FALSE}
-imbalance <- imbalance_metric(no_outgroup_tree)
+imbalance <- imbalance_metric(tree)
 ```
 
 ```{r Imbalance Metric}
@@ -111,8 +113,8 @@ Imbalance metric is 0.70, showing that while the tree is not completely balanced
 Speciation rate can calculated by fitting the yule process to a tree which will allow you to calculate the instantaneous speciation rate λ, which can be multiplied by the number of species to calculate the total speciation rate (Crawford & Suchard, 2013)
 
 ```{r Speciation Rate Calculation, echo=FALSE}
-yule_result <- yule(no_outgroup_tree)
-speciation_rate <- yule_result$lambda* (no_outgroup_tree$Nnode + 1) #Nnode +1 represents the number of species
+yule_result <- yule(tree)
+speciation_rate <- yule_result$lambda* (tree$Nnode + 1) #Nnode +1 represents the number of species
 ```
 
 ```{r Speciation Rate}
@@ -135,6 +137,36 @@ metric_table <- as.table(tree_metrics_matrix)
 ```{r Table, echo=FALSE}
 knitr::kable(tree_metrics_matrix)
 ```
+## Evolutionary Diversity per Tip
+
+```{r}
+
+number_of_tips <- Nnode(tree) + 1
+
+tip_length_list <- capture.output(for(i in 1:number_of_tips) {
+terminal.branch<-which(tree$edge[,2]== i)
+terminal_diversity <- c(tree$edge.length[terminal.branch])
+cat(terminal_diversity, "\n")
+} )
+
+tip_length_list <- as.numeric(tip_length_list)
+
+tips <- as.data.frame(tip_length_list)
+tips$species <- tree$tip.label
+
+
+
+
+```
+
+```{r fig.width=10, fig.height=4}
+ggplot(tips) +
+  geom_col(aes(x = species, y=tip_length_list)) +
+    scale_x_discrete(labels = label_wrap(10)) +
+  labs(x = "Species", y = "Evolutionary History") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5, vjust = 0.5))
+```
+
 
 
 ## Bonus Analysis - Comparing metrics within clades
