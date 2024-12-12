@@ -10,7 +10,7 @@ output:
 
 ## Abstract
 
-The tree being investigated here is one of all extant pinnipeds alongside 2 outgroups. The branch lengths in the tree is based on were calculated from a weighted matrix produced via analysis of 50 different genes (Hidgon, et. al., 2007). It is comprised of 3 monophyletic families, Phocidae (the earless or true seals), Otariidae (sealions and fur seals) and Odobenidae (Walruses). The Odobendiae only have one extant member and are grouped within the superfamily Otarioidea alonside the Otariids. The Phocidae are in turn split into two subfamilies, Monachinae which is the southern hemisphere seals and Phocinae which are the northern hemisphere seals. Otariidae are similarly divided into two subfamilies, the Artocephalinae also known as fur seals and the Otariinae which are the sea lions (Hidgon et. al., 2007).
+The tree being investigated here is one of all extant pinnipeds alongside 2 outgroups. The branch lengths in the tree is based on were calculated from a weighted matrix produced via analysis of 50 different genes (Hidgon, et. al., 2007). It is comprised of 3 monophyletic families, *Phocidae* (the earless or true seals), *Otariidae* (sealions and fur seals) and Odobenidae (Walruses). The *Odobendiae* only have one extant member and are grouped within the superfamily *Otarioidea* alongside the Otariids. The *Phocidae* are in turn split into two subfamilies, *Monachinae* which is the southern hemisphere seals and *Phocinae* which are the northern hemisphere seals. *Otariidae* are similarly divided into two subfamilies, the *Artocephalinae* also known as fur seals and the *Otariinae* which are the sea lions (Hidgon et. al., 2007).
 
 ## Tree Metrics
 
@@ -20,9 +20,10 @@ The tree being investigated here is one of all extant pinnipeds alongside 2 outg
 
 ```{r load in packages, results='hide', message=FALSE}
 library(ape)
-library(bslib)#allows access to bootswatch themes for markdown
+library(bslib) #allows access to bootswatch themes for markdown
 library(ggplot2)
 library(scales)
+library(dplyr)
 ```
 
 ###### Loading in the tree:
@@ -35,7 +36,7 @@ tree <- read.tree(text = "((((((((((((((Arctocephalus_australis:0.8,Arctocephalu
 
 ###### Plotting Tree:
 
-```{r plotting tree, fig.align='center', fig.height= 9, fig.width= 9, fig.cap="Fig 1: Phylogenetic tree of the Pinnipeds with axis in millions of years based on data from (Hidgon, et. al., 2007)"}
+```{r plotting tree, fig.align='center', fig.height= 9, fig.width= 9, fig.cap="Fig 1: Phylogenetic tree of the Pinnipeds with axis in millions of years based on data from (Hidgon, et. al., 2007)."}
 ladderised_tree <- ladderize(tree, right=FALSE) #Used to make it easier to see how the time scale maps onto the tree.
 plot(ladderised_tree, cex = 0.7)
 axisPhylo(cex = 0.5)
@@ -71,7 +72,7 @@ As the branch lengths in this tree are based on divergence dates in millions of 
 From this point forward the tree containing no outgroups will be used so that analyses are concerning solely the pinnipeds.
 
 ```{r Creating tree without outgroups, echo=FALSE}
-tree <- drop.tip(tree, c("Canidae", "Ursidae")) #would ignore this step if not removing outgroups from tree
+tree <- drop.tip(tree, c("Canidae", "Ursidae")) #would ignore/not run this step if you do not need to remove outgroups from tree
 ```
 
 ```{r Pinniped phylogenetic diversity calculation, echo=FALSE}
@@ -113,8 +114,11 @@ Imbalance metric is 0.70, showing that while the tree is not completely balanced
 Speciation rate can calculated by fitting the yule process to a tree which will allow you to calculate the instantaneous speciation rate λ, which can be multiplied by the number of species to calculate the total speciation rate (Crawford & Suchard, 2013)
 
 ```{r Speciation Rate Calculation, echo=FALSE}
+
+number_of_species <- Nnode(tree) + 1 #Nnode + 1 represents the number of species
+
 yule_result <- yule(tree)
-speciation_rate <- yule_result$lambda* (tree$Nnode + 1) #Nnode +1 represents the number of species
+speciation_rate <- yule_result$lambda* number_of_species 
 ```
 
 ```{r Speciation Rate}
@@ -122,7 +126,9 @@ speciation_rate
 ```
 
 
-## Metrics Table:
+## Summary of Metrics
+
+###### Metrics Table: 
 
 ```{r Setting up Table, echo=FALSE}
 tree_metrics_matrix <- matrix(c(phylo_div, imbalance, speciation_rate), ncol = 3, byrow = TRUE, nrow = 1)
@@ -134,111 +140,73 @@ metric_table <- as.table(tree_metrics_matrix)
 
 ```
 
-```{r Table, echo=FALSE}
+```{r Table, echo=FALSE, fig.align='center', fig.height= 9, fig.width= 9,fig.cap="Fig 2: Table summarising various metrics associated with the phylogenetic tree."}
 knitr::kable(tree_metrics_matrix)
+#Kable is used to tell R markdown to create a figure formatted as a table
 ```
 ## Evolutionary Diversity per Tip
 
-```{r}
+```{r calculating evolutionary diversity for each tip, echo =FALSE}
 
-number_of_tips <- Nnode(tree) + 1
-
-tip_length_list <- capture.output(for(i in 1:number_of_tips) {
+tip_length_list <- capture.output(
+  for(i in 1:number_of_species) {
 terminal.branch<-which(tree$edge[,2]== i)
-terminal_diversity <- c(tree$edge.length[terminal.branch])
+terminal_diversity <- (tree$edge.length[terminal.branch])
 cat(terminal_diversity, "\n")
-} )
+   } 
+)
 
-tip_length_list <- as.numeric(tip_length_list)
+#The for loop here prints a the tip length for each succesive value of i from 1 to the total number of species.
+#Capture.output is used to save the results of each result printed (otherwise they are overwritten each time the for loop runs for the next value of i)
 
-tips <- as.data.frame(tip_length_list)
-tips$species <- tree$tip.label
-
-
-
+#cat is used an an alternative to print as it does not output [1] so only the tip length is saved by capture.output.
+#/n is needed to tell cat to create a new line after each tip lenght, otherwise it prints them all as one continuous string of numbers.
 
 ```
 
-```{r fig.width=10, fig.height=4}
-ggplot(tips) +
-  geom_col(aes(x = species, y=tip_length_list)) +
+```{r creating dataframe from  for loop outputs, echo = FALSE}
+tip_length_list <- as.numeric(tip_length_list) #the output of cat is character data, this must be converted into numerical data so that it can then be converted into a dataframe.
+
+tip_evo_div_data <- as.data.frame(tip_length_list) #converting tip lengths into a dataframe so it can be plotted
+new.names <- gsub("_"," ",tree$tip.label) # Changing the species names so they are in the format Genus species rather than Genus_species
+tip_evo_div_data$species <- new.names #adding a coloumn for species names into the dataset.
+```
+
+```{r Creating Quartile Column, echo = FALSE}
+med <- median(tip_evo_div_data$tip_length_list)
+first_quartile <- quantile(tip_evo_div_data$tip_length_list, 0.25)
+third_quartile <- quantile(tip_evo_div_data$tip_length_list, 0.75)
+
+#saving the values of Q1, Q3 and the median as objects
+
+quartile_table <- tip_evo_div_data %>% mutate(Quartile =
+                     case_when(tip_length_list >= third_quartile ~ "≥ 75th Percentile", 
+                               tip_length_list >= med ~ "≥ 50th Percentile",
+                               tip_length_list >= first_quartile ~ "≥ 25th Percentile",
+                               tip_length_list < first_quartile ~ "< 25th Percentile"
+                               )
+)
+
+# Creating a new table with an extra column classifying species into which quarter of the dataset they fall into based on their branch length.
+```
+
+```{r Rearranging the order of factors, echo=FALSE}
+quartile_table$Quartile <- factor(quartile_table$Quartile, levels = c("≥ 75th Percentile", "≥ 50th Percentile","≥ 25th Percentile", "< 25th Percentile") )
+```
+
+###### Bar Chart:
+
+```{r plotting evolutionary diversity of tips, echo=FALSE, fig.width=10, fig.height=6, fig.cap = "Fig 3: Bar Chart showing the Evolutionary Diversity of each tip"}
+
+ ggplot(data = quartile_table) +
+  geom_col(aes(x=species, y=tip_length_list, fill = Quartile)) +
     scale_x_discrete(labels = label_wrap(10)) +
-  labs(x = "Species", y = "Evolutionary History") +
-  theme(axis.text.x = element_text(angle = 90, hjust = 0.5, vjust = 0.5))
+  labs(x = "Species", y = "Tip Branch Length", 
+       title = "Unique evolutionary history of each tip as measured by the branch length") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5, vjust = 0.5, size = 6, face = "bold.italic"), plot.title = element_text(hjust = 0.5, face ="bold"), legend.title = element_blank()) + 
+  scale_fill_manual(values = c("#EF9007", "#F6D317", "#45BCEE", "#2B6987"))
+ 
 ```
 
+The species contributing most to the phylogenetic diversity of the pinnipeds are *Odobenus rosmarus*, *Erignathus barbatus* and *Monachus monachus* respectively. The walrus tip having the most phylogenetic diversity is not suprising as it is the only living member of its family. Aside from the walrus, overall 7 of the 25% most phylogenetially diverse tips were from the the Phocids versus only 2 from the Otariids. This suggests that the extant *Phocinae* might have contributed more to evolutionary history than the *Otaridae*.
 
-
-## Bonus Analysis - Comparing metrics within clades
-
-Although there are technically three extant families within the Pinnipeds as there is only one living species within *Odobenidae* therefore I will just be comparing *Otariidae* and *Phocidae* in this analysis.
-
-<!--I also wanted to see if the two main families, Otariidae and Phocidae where equally diverse, however I did not want this code to interfere with the ability of the main tree analysis to automatically reproduce figures and tables if topology if the original tree is changed, hence why this section has been moved to the end of the report-->
-
-Otariidae imbalance:
-
-```{r Creating Otariidae Sub-Tree, echo=FALSE}
-subtrees <- subtrees(tree)
-otariidae_subtree <- subtrees[[5]]
-```
-
-```{r Otariidae Imbalance }
-imbalance_metric(otariidae_subtree)
-```
-
-Phocidae Imbalance:
-
-```{r Creating Phocidae Sub-Tree, echo=FALSE}
-subtrees <- subtrees(tree)
-phocidae_subtree <- subtrees[[18]]
-```
-
-```{r Phocidae Imbalance}
-imbalance_metric(phocidae_subtree)
-```
-
-```{r Function for creating a balance table,  echo=FALSE}
-imbalance_table <-function (tr) {
-x<-balance(tr)
-for (i in (1:nrow(x))) {
-if (x[i,1]<x[i,2]) {
-x[i,1:2]<- x[i,2:1]}
-}
-return(data.frame(x[,1]/(x[,1]+x[,2])))}
-```
-
-```{r Otariidae Imbalance Table, echo=FALSE, results='hide'}
-otariidae_imbalance_table <-(imbalance_table(otariidae_subtree))
-colnames(otariidae_imbalance_table)[1] ="Balance"
-otariidae_imbalance_table
-```
-
-```{r Phocidae Imbalance Table, echo=FALSE, results='hide'}
-phocidae_imbalance_table <-(imbalance_table(phocidae_subtree))
-colnames(phocidae_imbalance_table)[1] ="Balance"
-phocidae_imbalance_table
-```
-
-F test of equal variance:
-
-```{r F Test}
-var.test(phocidae_imbalance_table$Balance, otariidae_imbalance_table$Balance)
-```
-
-P value is 0.3054, as this is \> 0.05 we do not reject the null hypothesis and can conclude that the variances a likely not significantly different.
-
-```{r 2 Sample T Test}
-t.test(phocidae_imbalance_table$Balance, otariidae_imbalance_table$Balance, var.equal = TRUE)
-```
-
-P value is 0.2057 meaning that we do not reject the null hypothesis and conclude that the imbalance metric between Phocidae and Otariidae is not statistically significant.
-
-I also decided to investigate whether the two families are equally diverse and contain similar amounts of evolutionary history.
-
-```{r Otariid Diversity}
-sum(otariidae_subtree$edge.length)
-```
-
-```{r Phocidae Diversity}
-sum(phocidae_subtree$edge.length)
-```
