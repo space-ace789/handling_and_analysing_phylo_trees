@@ -10,15 +10,22 @@ output:
 
 ## Abstract
 
+The tree being investigated here is one of all extant pinnipeds alongside two outgroups. The branch lengths in the original dataset were calculated from a weighted matrix produced via analysis of 50 different genes (Hidgon, et. al., 2007). It is comprised of three monophyletic families, *Phocidae* (the earless or true seals), *Otariidae* (sealions and fur seals) and Odobenidae (Walruses). The *Odobendiae* have only one extant member and are currently grouped within the superfamily *Otarioidea* alongside the Otariids, although this placement has been debated in the past. The *Phocidae* are split into two subfamilies, *Monachinae* which is the southern hemisphere seals and *Phocinae* which are the northern hemisphere seals. *Otariidae* are similarly divided into two subfamilies, the *Artocephalinae* also known as fur seals and the *Otariinae* which are the sea lions (Hidgon et. al., 2007).
+
+Extant pinnipeds have diversified slowly for most of their evolutionary history, with majority of currently living species being the result of recent, rapid speciation events. Almost 80% of extant species are less than five million years old. There is also a clear divide between the two main families, in that the *Phocidae* in general represents older species with longer evolutionary histories. While most of the extanct *Otariidae* are the result of more recent, rapid speciation, especially the fur seals. However with the exception of *Odobenidae*, despite the differences in when diversification happened species richness appears to be equally distributed between the families.
+
 ## Tree Metrics
 
-#### Set up
+#### Set up:
 
 ###### Loading required packages:
 
-```{r results='hide', message=FALSE}
+```{r load in packages, results='hide', message=FALSE}
 library(ape)
-library(bslib)
+library(bslib) #allows access to bootswatch themes for markdown
+library(ggplot2)
+library(scales)
+library(dplyr)
 ```
 
 ###### Loading in the tree:
@@ -29,62 +36,61 @@ The raw data for this tree was downloaded from the Open Tree of Life datastore, 
 tree <- read.tree(text = "((((((((((((((Arctocephalus_australis:0.8,Arctocephalus_galapagoensis:0.8):0.3,Arctocephalus_forsteri:1.1):1.9,(Arctocephalus_gazella:0.1,Arctocephalus_tropicalis:0.1):2.9):0.1,(Arctocephalus_philippii:0.3,Arctocephalus_townsendi:0.3):2.8):0.2,Phocarctos_hookeri:3.3):0.9,Arctocephalus_pusillus:4.2):0.2,Otaria_byronia:4.4):0.8,(Eumetopias_jubatus:4.5,Zalophus_californianus:4.5):0.7):0.4,Neophoca_cinerea:5.6):2.6,Callorhinus_ursinus:8.2):9.8,Odobenus_rosmarus:18):5,(((Cystophora_cristata:7.9,(((((Halichoerus_grypus:1.7,Pusa_caspica:1.7):0.1,Pusa_sibirica:1.8):0.1,(Phoca_largha:0.9,Phoca_vitulina:0.9):1):0.2,Pusa_hispida:2.1):4.3,(Histriophoca_fasciata:4.3,Pagophilus_groenlandica:4.3):2.1):1.5):5.1,Erignathus_barbatus:13):3,(((((Hydrurga_leptonyx:4.3,Leptonychotes_weddellii:4.3):2.5,Ommatophoca_rossii:6.8):0.3,Lobodon_carcinophagus:7.1):2.8,(Mirounga_angustirostris:2.3,Mirounga_leonina:2.3):7.6):1.4,(Monachus_monachus:9.9,(Monachus_schauinslandi:4.9,Monachus_tropicalis:4.9):5):1.4):4.7):7):12.7,Ursidae:35.7):7.7,Canidae:43.4);")
 ```
 
-###### Plotting Tree:
+#### Plotting Phylogenetic Tree:
 
-```{r plotting tree, fig.align='center', fig.height= 9, fig.width= 9, fig.cap="Fig 1: Phylogenetic tree of the Pinnipeds with Canidae and Ursidae acting as outgroups based on data from (Hidgon, et. al., 2007)"}
-ladderised_tree <- ladderize(tree, right=FALSE)
-plot(ladderised_tree, cex = 0.7)
-axisPhylo(cex = 0.5)
+```{r Plotting tree, fig.align='center', fig.height= 9, fig.width= 9, fig.cap="Fig 1: Phylogenetic tree of the Pinnipeds with axis in millions of years based on data from (Hidgon, et. al., 2007).", echo=FALSE}
+plot(tree, cex = 0.7)
+axisPhylo(cex = 0.5, side = 3)
 ```
 
-Insert caption for this tree here
+This tree shows the 33 extant species of pinnipeds, as well as the recently extinct Caribbean Monk Seal (*Monachus tropicalis*). Since the study this tree is based on was published the Caribbean Monk Seal and it's sister taxa, the Hawaiian Monk seal have been reclassified into their own genus *Neomonachus* based on analysis of cytochrome B sequences (Scheel, et. al., 2014).
 
-**Insert caption here**
+Additionally the tree has Canidae and Ursidae acting as the outgroups. *Mustelidae* may have been a more appropriate outgroup as it has since been shown that they are the likely the sister family to *Pinnepedia* (Park, et. al., 2024). It also shows Odobenids sitting within the *Otariidae* which is the better supported hypothesis, however it was once thought they might group within *Phocidae* instead (Hidgon, et. al, 2007). It also suggests that some groups may not be completely monophyletic, for example *Phocarctos hookeri*, the New Zealand sea lion has been placed within the fur seals.
 
 #### Analysis
 
 ###### Tree Topology:
 
-Although these features can often be inferred from looking at the shape of the tree I decided to test for both whether the tree was ultrametric and bifurcating.
-
-```{r testing if tree is ultrametric and bifurcating}
+```{r Testing if tree is ultrametric and bifurcating}
 is.ultrametric(tree)
 is.binary(tree)
 ```
 
-The tree being ultrametric was expected as this is a tree of all extant pinnipeds and both of the outgroups used are also clades that still exist today so all of the branches should continue until the present day.
+The tree being ultrametric was expected as this is a tree of all extant pinnipeds and both of the outgroups used are also clades that still exist today so all of the branches should continue until the present day, and therefore be equidistant from the root.
 
-Although it does match the observed branching pattern of the tree it was slightly unexpected that the tree was found to be bifurcating. This is because this suggeststhe tree contains no polytomies. This is interesting however as it has been suggested that polytomies could exist both at the basal end of the tribe *Phocini* (one of three tribes that make up the *Phocinae* subfamily of earless/true seals) and potentially within the genus *Pusa* (Hidgon, et. al., 2007).
+Although it mathes the observed branching pattern of the tree it was slightly unexpected that the tree was found to be bifurcating. This is because this suggeststhe tree contains no polytomies. This is interesting however as it has been suggested that polytomies could exist both at the basal end of the tribe *Phocini* (one of three tribes that make up the *Phocinae* subfamily of earless/true seals) and potentially within the genus *Pusa* (Hidgon, et. al., 2007).
 
 It is also important to check these as some of the functions used to analyse tree metrics assume that trees are ultrametric and bifurcating.
 
-Phylogenetic diversity:
+###### Phylogenetic diversity:
 
-An easy way to calculate phylogenetic diversity is to find the total branch length of the whole tree.
-
-```{r whole tree phylogenetic diversity}
+```{r Whole tree phylogenetic diversity}
 sum(tree$edge.length)
 ```
 
-As the branch lengths in this tree are based on divergence dates in millions of years the total sum of branch lengths can be used to indicate the total amount of evolutionary history which is contained within this tree. This shows that this tree contains 319.8 years of evolutionary history, however this also includes the *Canidae* and *Ursidae* out groups.
+As the branch lengths in this tree are based on divergence dates in millions of years the total sum of branch lengths can be used to indicate the total amount of evolutionary history contained within the tree. This shows that this tree contains 319.8 years of evolutionary history, however this includes the *Canidae* and *Ursidae* out groups.
 
 From this point forward the tree containing no outgroups will be used so that analyses are concerning solely the pinnipeds.
 
-```{r Creating tree without outgroups, echo=FALSE}
-no_outgroup_tree <- drop.tip(tree, c("Canidae", "Ursidae"))
+```{r Removing outgroups, echo=FALSE}
+tree <- drop.tip(tree, c("Canidae", "Ursidae")) #would ignore/not run this step if you do not need to remove outgroups from tree
 ```
 
-```{r Pinniped phylogenetic diversity}
-sum(no_outgroup_tree$edge.length)
+```{r Pinniped phylogenetic diversity calculation, echo=FALSE}
+phylo_div <- sum(tree$edge.length)
 ```
 
-Running this without the outgroups included shows that from the last common pinniped ancestor there is 220.3 million years of evolutionary history conserved.
+```{r Phylogenetic Diversity}
+phylo_div
+```
 
-Tree Imbalance:
+Running this excluding outgroups, shows that from the last common pinniped ancestor of living pinnipeds there are 220.3 million years of evolutionary history are preserved within the group.
 
-```{r Function for calculating imbalance metric, echo=FALSE}
-imbalance_metric <-function (tr) {
-x<-balance(tr)
+###### Tree Imbalance:
+
+```{r Function for calculating Imbalance Metric, echo=FALSE}
+imbalance_metric <-function (tree) {
+x<-balance(tree)
 for (i in (1:nrow(x))) {
 if (x[i,1]<x[i,2]) {
 x[i,1:2]<- x[i,2:1]}
@@ -92,87 +98,340 @@ x[i,1:2]<- x[i,2:1]}
 return(mean(x[,1]/(x[,1]+x[,2])))}
 ```
 
-```{r Pinniped Imbalance Metric}
-imbalance_metric(no_outgroup_tree)
+```{r Pinniped Imbalance Metric Calculation, echo=FALSE}
+imbalance <- imbalance_metric(tree)
 ```
 
-Imbalance metric is 0.70, showing that while the tree is not completely balanced it is still overall more balanced than unbalanced. It also suggests there is a slight tendency for progressive branching, which can be seen specifically in the genus *Arctocephalus* and also the tribe *Phocina* (includes the genus *Phoca* as well as *Halicheoeris grypus*).
+```{r Imbalance Metric}
+imbalance
+```
 
-Speciation Rate:
+The imbalance metric is 0.70, showing that the tree is overall more balanced than unbalanced. It also suggests there is a slight tendency for progressive branching, which can be seen specifically in the genus *Arctocephalus* and also the tribe *Phocina* (includes the genus *Phoca* as well as *Halicheoeris grypus*).
 
-**insert info about yule here**
+###### Speciation Rate:
 
-```{r}
-Yule_result <- yule(no_outgroup_tree)
-Yule_result$lambda* 34
+Speciation rate can be calculated by fitting the yule process to a tree which then allows you to calculate the instantaneous speciation rate λ. This is multiplied by the number of species to calculate the total speciation rate (Crawford & Suchard, 2013)
+
+```{r Speciation Rate Calculation, echo=FALSE}
+
+number_of_species <- Nnode(tree) + 1 #Nnode + 1 represents the number of species
+
+yule_result <- yule(tree)
+speciation_rate <- yule_result$lambda* number_of_species 
+```
+
+```{r Speciation Rate}
+speciation_rate
+```
+
+## Summary of Metrics
+
+#### Table:
+
+```{r Setting up Table, echo=FALSE}
+tree_metrics_matrix <- matrix(c(phylo_div, imbalance, speciation_rate), ncol = 3, byrow = TRUE, nrow = 1)
+
+colnames(tree_metrics_matrix) <- c('Phylogenetic Diversity','Imbalance','Speciation Rate')
+rownames(tree_metrics_matrix) <- "Values"
+
+metric_table <- as.table(tree_metrics_matrix)
 
 ```
 
-```{r}
-diversi.gof(branching.times(no_outgroup_tree))
+```{r Plot Table, echo= FALSE, fig.align='center', fig.height= 9, fig.width= 9, }
+knitr::kable(tree_metrics_matrix, caption = 'Fig 2: Table summarising various metrics associated with the phylogenetic tree.')
+#Kable is used to tell R markdown to create a figure formatted as a table
 ```
 
-## Bonus Analysis - Comparing Diversity intra-clade diversity
+## Evolutionary Diversity per Tip
 
-As well as looking at the overall diversity of a tree it can also be interesting to see if certain families within a clade differ in amounts of diversity. Although there are technically three extant families within the Pinnipeds as there is only one living species within *Odobenidae* therefore I will just be comparing *Otariidae* and *Phocidae* in this analysis.
+```{r Calculate evolutionary diversity for each tip, echo =FALSE}
 
-<!--I also wanted to see if the two main families, Otariidae and Phocidae where equally diverse, however I did not want this code to interfere with the ability of the main tree analysis to automatically reproduce figures and tables if topology if the original tree is changed, hence why this section has been moved to the end of the report-->
+terminal_diversity <- matrix(nrow = 34) #Creating an emtpy matrix for the output of 
 
-Otariidae imbalance:
+  for(i in 1:number_of_species) {
+terminal.branch<-which(tree$edge[,2]== i)
+terminal_diversity[[i]] <- (tree$edge.length[terminal.branch])
+   } 
 
-```{r Creating Otariidae Sub-Tree, echo=FALSE}
-subtrees <- subtrees(tree)
-Otariidae_subtree <- subtrees[[5]]
+
+#The for loop here prints a the tip length for each succesive value of i from 1 to the total number of species.
+#Capture.output is used to save the results of each result printed (otherwise they are overwritten each time the for loop runs for the next value of i)
+
+#cat is used an an alternative to print as it does not output [1] so only the tip length is saved by capture.output.
+#/n is needed to tell cat to create a new line after each tip lenght, otherwise it prints them all as one continuous string of numbers.
+
 ```
 
-```{r Otariidae Phylogenetic Diversity}
-Otariidae_imbalance <- imbalance_metric(Otariidae_subtree)
-Otariidae_imbalance
+```{r Creating dataframe from for loop outputs, echo = FALSE}
+
+tip_evo_div_data <- as.data.frame(terminal_diversity)
+colnames(tip_evo_div_data) <- c("terminal_diversity")#converting tip lengths into a dataframe so it can be plotted
+new.names <- gsub("_"," ",tree$tip.label) # Changing the species names so they are in the format Genus species rather than Genus_species
+tip_evo_div_data$species <- new.names #adding a coloumn for species names into the dataset.
 ```
 
-Phocidae Imbalance:
+```{r Creating Quartile Column, echo = FALSE}
+med <- median(tip_evo_div_data$terminal_diversity)
+first_quartile <- quantile(tip_evo_div_data$terminal_diversity, 0.25)
+third_quartile <- quantile(tip_evo_div_data$terminal_diversity, 0.75)
 
-```{r echo=FALSE}
-subtrees <- subtrees(tree)
-Phocidae_subtree <- subtrees[[18]]
+#saving the values of Q1, Q3 and the median as objects.
+
+quartile_table <- tip_evo_div_data %>% mutate(Quartile =
+                     case_when(terminal_diversity >= third_quartile ~ "≥ 75th Percentile", 
+                               terminal_diversity >= med ~ "≥ 50th Percentile",
+                               terminal_diversity >= first_quartile ~ "≥ 25th Percentile",
+                               terminal_diversity < first_quartile ~ "< 25th Percentile"
+                               )
+)
+
+# Creating a new table with an extra column classifying species into which quarter of the dataset they fall into based on their branch length.
 ```
 
-```{r}
-imbalance_metric(Phocidae_subtree)
+```{r Rearranging the order of factors, echo=FALSE}
+quartile_table$Quartile <- factor(quartile_table$Quartile, levels = c("≥ 75th Percentile", "≥ 50th Percentile","≥ 25th Percentile", "< 25th Percentile") )
 ```
 
-```{r Function for creating a balance table,  echo=FALSE}
-imbalance_table <-function (tr) {
-x<-balance(tr)
-for (i in (1:nrow(x))) {
-if (x[i,1]<x[i,2]) {
-x[i,1:2]<- x[i,2:1]}
+#### Plotting Bar Chart:
+
+```{r plotting evolutionary diversity of tips, echo=FALSE, fig.width=10, fig.height=6, fig.align='center',fig.cap = "Fig 3: Bar Chart showing the Evolutionary Diversity of each tip"}
+
+ ggplot(data = quartile_table) +
+  geom_col(aes(x=species, y=terminal_diversity, fill = Quartile)) +
+  scale_x_discrete(labels = label_wrap(10)) +
+  labs(x = "Species", y = "Tip Branch Length", 
+       title = "Unique Evolutionary History of each Tip as Measured by the Branch Length") +
+  theme(axis.text.x = element_text(angle = 90, hjust = 0.5, vjust = 0.5, size = 6, face = "bold.italic"), 
+  plot.title = element_text(hjust = 0.5, size = 18), 
+  legend.title = element_blank(),
+  legend.position = c(.87, .80),) + 
+  scale_fill_manual(values = c("#EF9007", "#F6D317", "#45BCEE", "#2B6987"))
+ 
+```
+
+The species contributing most to phylogenetic diversity are *Odobenus rosmarus*, *Erignathus barbatus* and *Monachus monachus* respectively. The walrus tip having the most phylogenetic diversity is not suprising as it is the only living representative of its family. Aside from the walrus, 7 of the 25% most phylogenetially diverse tips were from the the Phocids compared to only 2 from the Otariids. This suggests that the extant *Phocinae* may have contributed more to evolutionary history than the *Otaridae*. Most evolutionary history is held by a few very old species, with only 23% of tips contributing more than 5 million years of evolutionary history, and just less than half of extant species are less than 2.5 million years old.
+
+## Modelling the Effect of Random Extinctions
+
+###### Models:
+
+The code below simulates 100 random extinctions of a single species.
+
+```{r Random extinction of 1 species}
+
+rmv_1_sp<- matrix(nrow = 100)
+
+for(i in 1:100) {
+tree_trimmed1 <- drop.tip(tree, tree$tip.label[sample(1:34,1)])
+rmv_1_sp[[i]]<-(sum(tree_trimmed1$edge.length))
 }
-return(data.frame(x[,1]/(x[,1]+x[,2])))}
+
 ```
 
-```{r echo=FALSE, results='hide'}
-Otariidae_imbalance_table <-(imbalance_table(Otariidae_subtree))
-colnames(Otariidae_imbalance_table)[1] ="Balance"
-Otariidae_imbalance_table
+This process was then repeated for the loss of 5, 10, 15, 25 and 30 random species.
+
+```{r Random extinction of 5 species, echo=FALSE}
+rmv_5_sp <- matrix(nrow = 100)
+
+for(i in 1:100) {
+tree_trimmed5 <- drop.tip(tree, tree$tip.label[sample(1:34,5)])
+rmv_5_sp[[i]]<-(sum(tree_trimmed5$edge.length))
+}
+
 ```
 
-```{r echo=FALSE, results='hide'}
-Phocidae_imbalance_table <-(imbalance_table(Phocidae_subtree))
-colnames(Phocidae_imbalance_table)[1] ="Balance"
-Phocidae_imbalance_table
+```{r Random extinction of 10 species, echo =FALSE}
+rmv_10_sp <- matrix(nrow = 100)
+
+for(i in 1:100) {
+tree_trimmed10 <- drop.tip(tree, tree$tip.label[sample(1:34,10)])
+rmv_10_sp[[i]]<-(sum(tree_trimmed10$edge.length))
+}
+
 ```
 
-F test of equal variance:
+```{r Random extinction of 15 species, echo=FALSE}
+rmv_15_sp <- matrix(nrow = 100)
 
-```{r}
-var.test(Phocidae_imbalance_table$Balance, Otariidae_imbalance_table$Balance)
+for(i in 1:100) {
+tree_trimmed15 <- drop.tip(tree, tree$tip.label[sample(1:34,15)])
+rmv_15_sp[[i]]<-(sum(tree_trimmed15$edge.length))
+}
+
 ```
 
-P value is 0.3054, as this is \> 0.05 we do not reject the null hypothesis and can conclude that the variances a likely not significantly different.
+```{r Random extinction of 20 species, echo=FALSE}
+rmv_20_sp <- matrix(nrow = 100)
 
-```{r}
-t.test(Phocidae_imbalance_table$Balance, Otariidae_imbalance_table$Balance, var.equal = TRUE)
+for(i in 1:100) {
+tree_trimmed20 <- drop.tip(tree, tree$tip.label[sample(1:34,20)])
+rmv_20_sp[[i]]<-(sum(tree_trimmed20$edge.length))
+}
+
 ```
 
-P value is 0.2057 meaning that we do not reject the null hypothesis and conclude that the imbalance metric between Phocidae and Otariidae is not statistically significant.
+```{r Random extinction of 25 species, echo =FALSE}
+rmv_25_sp <- matrix(nrow = 100)
+
+for(i in 1:100) {
+tree_trimmed25 <- drop.tip(tree, tree$tip.label[sample(1:34,25)])
+rmv_25_sp[[i]]<-(sum(tree_trimmed25$edge.length))
+}
+
+```
+
+```{r Random extinction of 30 species, echo=FALSE}
+rmv_30_sp <- matrix(nrow = 100)
+
+for(i in 1:100) {
+tree_trimmed30 <- drop.tip(tree, tree$tip.label[sample(1:34,30)])
+rmv_30_sp[[i]]<-(sum(tree_trimmed30$edge.length))
+}
+
+```
+
+```{r Creating a table with the phylogenetic diversities of each extinction simulation, echo=FALSE}
+table <- cbind(rmv_1_sp,rep(paste("1 Species"),100))
+table2 <- cbind(rmv_5_sp, rep(paste("5 Species"), 100))
+table3 <- cbind(rmv_10_sp, rep(paste("10 Species"), 100))
+table4 <- cbind(rmv_15_sp, rep(paste("15 Species"), 100))
+table5 <- cbind(rmv_20_sp, rep(paste("20 Species"), 100))
+table6 <- cbind(rmv_25_sp, rep(paste("25 Species"), 100))
+table7 <- cbind(rmv_30_sp, rep(paste("30 Species"), 100))
+
+extinction_table <-rbind.data.frame(table,table2, table3, table4, table5, table6, table7)
+colnames(extinction_table) <- c("phylo_div", "No_sp_lost")
+
+#Output for Phylo_div was of the class charater, so had to be converted to numeric to allow correct plotting (character is discrete while numeric is continuous)
+numeric_vector <- as.numeric(extinction_table$phylo_div) 
+extinction_table$phylo_div <- numeric_vector
+```
+
+```{r Setting the Correct Order, echo =FALSE}
+extinction_table$No_sp_lost <- factor(extinction_table$No_sp_lost, levels = c("1 Species", "5 Species", "10 Species", "15 Species", "20 Species", "25 Species", "30 Species"))
+```
+
+#### Plotting Graph:
+
+```{r Plotting effect of random extinctions, echo=FALSE, fig.width=6, fig.height=6, fig.align = 'centre', fig.cap="Fig 4: A box plot showing mean loss and variation in loss of phylogenetic diversity as more species randomly go exting. Dashed line represents diversity with no extinctions"}
+ggplot(extinction_table) +
+    geom_boxplot(aes(No_sp_lost, phylo_div, alpha = 0, fill = No_sp_lost), show.legend = FALSE, outliers = FALSE) +
+  geom_jitter(aes(No_sp_lost, phylo_div, colour = No_sp_lost, alpha = 0), show.legend = FALSE, size = 0.7) +
+  geom_hline(yintercept = phylo_div, colour = "darkgray", linetype = "dashed")+
+labs( x= "Number of Extinct Species", y= "Phylogenetic Diversity", title = "Amount of Phylogenetic Diversity Lost with Increasing Numbers of Random Extinctions") +
+  theme( plot.title = element_text(hjust = 0.5, size = 10 )) +
+  scale_colour_manual(values = c("#EF9007", "#F09D0A", "#F2AB0D", "#F3B811", "#F5C614","#F5C814", "#F6D317")) +
+  scale_fill_manual(values = c("gray20", "gray30", "gray40", "gray50", "gray60","gray70", "gray80"))
+  
+```
+
+As expected this graph shows that the more species which go extinct the more phylogenetic diversity is lost. The general pattern is a step-wise decrease, every five additional extinction causing another loss of around 25 million years of phylogenetic diversity. This suggests that rate of diversity loss per species is constant and could potentially be predicted by fitting it to a linear model. However especially at intermediate levels of extinction there is a lot of variability in the exact amount of diversity lost. Indicating that the impact of extinctions on diversity is dependent on which species is actually going extinct, and therefore the different pinniped species do not equally contribute to diversity.
+
+## Tip Diversification Rate
+
+###### Calculating Tip Diversification:
+
+```{r Creating function to calculate the number of branching events, echo =FALSE}
+
+Number_branching_events <- function(i){
+length(nodepath(tree, from = number_of_species+1, to = i))-1 
+}
+
+#nodepath show which nodes you pass through to get from one node to the other, as nodes are labelled from the tips first the base node number will always be the number of species +1. length(nodepath()) will give you the number of nodes not the branching events you need to subtract 1 to get the number of times the tree branches to reach the tip.
+```
+
+```{r Generating a list with the number of branching events, echo=FALSE}
+
+branching_events_list <- matrix(nrow = 34)
+colnames(branching_events_list) <- c("branching_events")
+
+for( i in 1:number_of_species) {
+  branching_events_list[[i]] <- Number_branching_events(i)
+
+}
+```
+
+Because the tree is ultrametric all of the tips are the same length from the tree base.
+
+```{r Finding the total branch length, message=FALSE, echo=FALSE}
+total_branch_length <- node.depth.edgelength(tree)[1]
+
+#node.depth.edgelength finds the depth of each node in terms of total edge length, because the tree is ultrametric you can extract any specific node branch length from 1 to the total number of tips as nodes are labelled starting from the tips. 
+```
+
+```{r Total Branch Length}
+total_branch_length
+```
+
+23 is the total branch length from node to tip for all tips, since the tree is ultrametric this means that the last common ancestor of all extant pinnipeds existed at least 23 MYA.
+
+```{r Creating the table of tip Diversity, echo=FALSE}
+tip_div <- matrix(nrow = 34)
+colnames(tip_div) <- "tip_div"
+
+for (i in 1:number_of_species) {
+  tip_div[[i]] <- branching_events_list[i,]/total_branch_length
+}
+
+tip_div_data <- as.data.frame(tip_div)
+tip_div_data$species <- tree$tip.label
+```
+
+```{r Check that the species order in the tree and the diversification dataset are the same, echo=FALSE, results='hide'}
+pmatch(tree$tip.label,tip_div_data$species)
+```
+
+```{r Classify as high or low diversifiaction rate, echo=FALSE}
+med <- median(tip_div_data$tip_div)
+
+#Classifiying species as having high or low diversification rates based on whether they are below or above the median.
+
+tip_div_data <- tip_div_data %>% mutate(High_or_low =
+                     case_when( tip_div >= med ~ "high",
+                               tip_div < med ~ "low" )
+)
+
+```
+
+In order to track the diversification rate across pinniped ancestors each species was grouped into either "High" or "Low" depending on whether their tip diversification rate was above or below the median.
+
+```{r Ancestral reconstruction, echo = FALSE, results='hide'}
+tree$node.label <- NULL
+recon <- ace(tip_div_data$High_or_low, tree, type = "discrete")
+recon
+```
+
+```{r Creating Colour Vectors, echo=FALSE}
+tip_cols = ifelse(grepl("high",tip_div_data$High_or_low),"#EF9007","#45BCEE")
+
+node_cols <- c("#EF9007", "#45BCEE")
+
+```
+
+#### Map Diversification Rate onto Phylogeny:
+
+```{r fig.width= 15, fig.height=15, fig.align='center', fig.cap = 'Fig 4: Phylogenetic tree with tip diversification rates and the probability this is the same as your ancestor mapped onto it',echo=FALSE,}
+
+
+plot(tree, type = "phylogram",label.offset=0.5)
+nodelabels(thermo = recon$lik.anc, piecol = node_cols,cex = 0.8, width = 0.3, height = 0.6)
+tiplabels(pch = 21, bg = tip_cols, cex = 1.5)
+axisPhylo(side = 3)
+legend("bottomleft", inset = 0.05,legend = c("High", "Low"), title = "Diversification Rate", fill = c("#EF9007","#45BCEE"),
+       cex =2.5, bty = "n", horiz =TRUE) 
+```
+
+This graph suggests that the ancestral state of the pinniped clade is to diversify at a slow rate, with rapid diverisifications happening more recently, mostly within the last 8 million years. In fact the majority of extant pinnipeds were identified as having a high diversification rate. Overall the extant Phocids appear to have undergone less rapid diversification than the Otariids with the majority of slow diversifiers being found within them. This is mostly due to slow tip diversification rate within the *Monachinae*.
+
+## Bibliography
+
+(Higdon, et al., 2007) doi: <https://doi.org/10.1186/1471-2148-7-216>
+
+(McTravish, et al., 2015) doi: <https://doi.org/10.1093/bioinformatics/btv276>
+
+(Park, et al., 2024) doi: <https://doi.org/10.1093/evolut/qpae061>
+
+(Crawford & Suchard, 2013) doi: <https://doi.org/10.1093/sysbio/syt010>
+
+(Scheel, et al., 2014) doi: <https://doi.org/10.3897/zookeys.409.6244>
