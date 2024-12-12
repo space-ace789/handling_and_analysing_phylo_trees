@@ -6,6 +6,9 @@ output:
       toc_depth: 2
       theme:
         bootswatch: cerulean
+  format:
+    html:
+       embed-resources: true
 ---
 
 ## Abstract
@@ -38,7 +41,7 @@ tree <- read.tree(text = "((((((((((((((Arctocephalus_australis:0.8,Arctocephalu
 
 #### Plotting Phylogenetic Tree:
 
-```{r Plotting tree, fig.align='center', fig.height= 9, fig.width= 9, fig.cap="Fig 1: Phylogenetic tree of the Pinnipeds with axis in millions of years based on data from (Hidgon, et. al., 2007).", echo=FALSE}
+```{r Plotting tree, fig.align="center", fig.height= 9, fig.width= 9, fig.cap="Fig 1: Phylogenetic tree of the Pinnipeds with axis in millions of years based on data from (Hidgon, et. al., 2007).", echo=FALSE}
 plot(tree, cex = 0.7)
 axisPhylo(cex = 0.5, side = 3)
 ```
@@ -195,7 +198,7 @@ quartile_table$Quartile <- factor(quartile_table$Quartile, levels = c("≥ 75th 
 
 #### Plotting Bar Chart:
 
-```{r plotting evolutionary diversity of tips, echo=FALSE, fig.width=10, fig.height=6, fig.align='center',fig.cap = "Fig 3: Bar Chart showing the Evolutionary Diversity of each tip"}
+```{r plotting evolutionary diversity of tips, echo=FALSE, fig.width=10, fig.height=6, fig.align="center",fig.cap = "Fig 3: Bar Chart showing the Evolutionary Diversity of each tip"}
 
  ggplot(data = quartile_table) +
   geom_col(aes(x=species, y=terminal_diversity, fill = Quartile)) +
@@ -314,7 +317,7 @@ extinction_table$No_sp_lost <- factor(extinction_table$No_sp_lost, levels = c("1
 
 #### Plotting Graph:
 
-```{r Plotting effect of random extinctions, echo=FALSE, fig.width=6, fig.height=6, fig.align = 'centre', fig.cap="Fig 4: A box plot showing mean loss and variation in loss of phylogenetic diversity as more species randomly go exting. Dashed line represents diversity with no extinctions"}
+```{r Plotting effect of random extinctions, echo=FALSE, fig.width=6, fig.height=6, fig.align = "centre", fig.cap="Fig 4: A box plot showing mean loss and variation in loss of phylogenetic diversity as more species randomly go exting. Dashed line represents diversity with no extinctions"}
 ggplot(extinction_table) +
     geom_boxplot(aes(No_sp_lost, phylo_div, alpha = 0, fill = No_sp_lost), show.legend = FALSE, outliers = FALSE) +
   geom_jitter(aes(No_sp_lost, phylo_div, colour = No_sp_lost, alpha = 0), show.legend = FALSE, size = 0.7) +
@@ -411,7 +414,7 @@ node_cols <- c("#EF9007", "#45BCEE")
 
 #### Map Diversification Rate onto Phylogeny:
 
-```{r fig.width= 15, fig.height=15, fig.align='center', fig.cap = 'Fig 4: Phylogenetic tree with tip diversification rates and the probability this is the same as your ancestor mapped onto it',echo=FALSE,}
+```{r fig.width= 15, fig.height=15, fig.align="center", fig.cap = 'Fig 4: Phylogenetic tree with tip diversification rates and the probability this is the same as your ancestor mapped onto it',echo=FALSE,}
 
 
 plot(tree, type = "phylogram",label.offset=0.5)
